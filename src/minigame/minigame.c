@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <conio.h>
+#include <stdbool.h>
+
+#define MAX_ENEMIES 10
 
 typedef struct Board {
     int rows;
@@ -14,13 +18,32 @@ typedef struct Player {
     char icon;
 } Player;
 
-Board* make_board(int n_rows, int n_cols);
-void print_board(Board* board, Player* Player);
+typedef struct Enemies {
+    Player* enemies[MAX_ENEMIES];
+    int n_enemies;
+} Enemies;
+
+typedef struct Gambiarra {
+    Board* board;
+    Enemies* enemies;
+} Gambiarra;
+
+Gambiarra* makeBoard(int n_rows, int n_cols);
+
+void printBoard(Board* board, Player* player, int horizontalPos, int verticalPos);
+void gameplay(Player* player, Gambiarra* Gambiarra);
+void freeBoard(Board* board);
+void freePlayer(Player* player);
+void enemyGameplay(Gambiarra* gambiarra);
+
+bool thePlayIsValid(Player* player, Board* board);
 
 Player* chooseIcon(char icon);
-Player* gameplay(int horizontalPos, int verticalPos, Player* player, Board* Board);
+
+Enemies* createEnemies(int n_rows, int n_cols);
 
 int main(){
+    srand(time(NULL)); 
     int rows, cols;
     char icon;
     
@@ -31,14 +54,19 @@ int main(){
     printf("Escolha seu icone: ");
     scanf(" %c", &icon);
 
-    Board* board = make_board(rows, cols);
+    Gambiarra* board = makeBoard(rows, cols);
     Player* player = chooseIcon(icon);
-    player = gameplay(0, 0, player, board);
-   
-    print_board(board, player);
+    player->horizontalPos=0;
+    player->verticalPos=0;
+    gameplay(player, board);
+    
+    freeBoard(board->board);
+    freePlayer(player);
+    return 0;
 }
 
-Board* make_board(int n_rows, int n_cols){
+Gambiarra* makeBoard(int n_rows,int n_cols){
+    Gambiarra* gambiarra = malloc(sizeof(Gambiarra));
     Board* matrix = malloc(sizeof(Board));
     matrix->rows = n_rows;
     matrix->cols = n_cols;
@@ -53,24 +81,34 @@ Board* make_board(int n_rows, int n_cols){
             board[i][j] = '_';
         }
     }
+    Enemies* enemy = malloc(sizeof(Enemies));
+    
+    enemy = createEnemies(n_rows, n_cols);
 
-    matrix->board = board;
-    return matrix;
+    for(int i=0; i<enemy->n_enemies; i++){
+        board[enemy->enemies[i]->verticalPos][enemy->enemies[i]->horizontalPos] = '$';
+    }
+
+    gambiarra->board->board = matrix;
+    gambiarra->enemies = enemy;
+    return gambiarra;
 }
 
-void print_board(Board* board, Player* player){
-    board->board[player->horizontalPos][player->verticalPos] = player->icon;
+void printBoard(Board* board, Player* player, int horizontalPos, int verticalPos){
+    system("cls");
+    board->board[verticalPos][horizontalPos] = '_';
+    board->board[player->verticalPos][player->horizontalPos] = player->icon;
     for (int i = 0; i < board->rows; i++) {
         for (int j = 0; j < board->cols; j++) {
             printf("%c", board->board[i][j]);
             if (j < board->cols - 1) {
-                printf("   ");
+                printf("  ");
             }
         }
         printf("\n");
         if (i < board->rows - 1) {
             for (int k = 0; k < board->rows - 1; k++) {
-                printf("----");
+                printf("-------");
             }
             printf("--\n");
         }
@@ -83,13 +121,119 @@ Player* chooseIcon(char icon){
     return player;
 }
 
-Player* gameplay(int horizontalPos, int verticalPos, Player* player, Board* board){
-    if (horizontalPos >= 0 && horizontalPos < board->rows &&
-        verticalPos >= 0 && verticalPos < board->cols) {
-        player->horizontalPos = horizontalPos;
-        player->verticalPos = verticalPos;    
-    } else {
-        printf("Posições inválidas para o jogador.\n");
+void gameplay(Player* player, Gambiarra* gambiarra){
+    char tecla;
+    bool fim = false;
+    do {
+        int horizontalPos = player->horizontalPos;
+        int verticalPos = player->verticalPos;
+        if (kbhit()) {
+            tecla = getch();
+            switch (tecla) {
+                case 'w':
+                    player->verticalPos--;
+                    break;
+
+                case 's':
+                    player->verticalPos++;
+                    break;
+
+                case 'a':
+                    player->horizontalPos--;
+                    break;
+
+                case 'd':
+                    player->horizontalPos++;
+                    break;
+
+                default:
+                    break;
+            }
+            printBoard(gambiarra->board, player, horizontalPos, verticalPos); // colocar tudo em gambiarra
+            enemyGameplay(gambiarra);
+            printf("%d",  gambiarra->enemies->enemies[0]->horizontalPos);
+            printf("ei ei olha o som");
+        }
+        if (thePlayIsValid(player, gambiarra->board)) {
+            fim = true;
+            break;
+        }
+    } while (!fim); 
+    return;
+}
+
+bool thePlayIsValid(Player* player, Board* board){
+    return (player->horizontalPos>=board->rows || player->verticalPos>=board->cols);
+} 
+
+void freeBoard(Board* board) {
+    for (int i = 0; i < board->rows; i++) {
+        free(board->board[i]);
     }
-    return player; 
+    free(board->board);
+    free(board);
+}
+
+void freePlayer(Player* player) {
+    free(player);
+}
+
+int randomMove(){
+    int r = rand()%5;
+    return r;
+}
+
+Enemies* createEnemies(int n_rows, int n_cols){
+    int n_enemies;
+    printf("escolha a quantidade de inimigos");
+    scanf("%d", &n_enemies);
+    Enemies* enemy = malloc(sizeof(Enemies));
+    enemy->n_enemies = n_enemies;
+
+    for(int i=0; i<n_enemies; i++){
+
+        int randomHorizontalPos=0;
+        while(randomHorizontalPos<=1){
+            randomHorizontalPos = rand()%n_rows;
+        }
+        int randomVerticalPos=0;
+        while(randomVerticalPos<=1){
+            randomVerticalPos = rand()%n_cols;
+        }
+        printf("vert: %d; horizontal: %d\n", randomHorizontalPos, randomHorizontalPos);
+        Player* enemyPlayer = malloc(sizeof(Player));
+        enemyPlayer->horizontalPos = randomHorizontalPos;
+        enemyPlayer->verticalPos = randomVerticalPos;
+        enemyPlayer->icon = '$';
+        enemy->enemies[i] = enemyPlayer;
+        printf("enemyV: %d\n", enemy->enemies[i]->verticalPos);
+        printf("enemyH: %d\n", enemy->enemies[i]->horizontalPos);
+    }
+    return enemy;
+}
+
+void enemyGameplay(Gambiarra* gambiarra){
+    for (int i = 0; i < gambiarra->enemies->n_enemies; i++) {
+        int movement = randomMove();
+        switch (movement) {
+            case 1:
+                gambiarra->enemies->enemies[i]->verticalPos++;
+                break;
+            case 2:
+                gambiarra->enemies->enemies[i]->verticalPos--;
+                break;
+            case 3:
+                gambiarra->enemies->enemies[i]->horizontalPos++;
+                break;
+            case 4:
+                gambiarra->enemies->enemies[i]->horizontalPos--;
+                break;
+            default:
+                break;
+        }
+        printf("ei ta caindo aqui");
+        printBoard(gambiarra->board, gambiarra->enemies->enemies[i], gambiarra->enemies->enemies[i]->horizontalPos,
+         gambiarra->enemies->enemies[i]->verticalPos);
+    }
+
 }

@@ -1,3 +1,4 @@
+/*
 package models
 
 class Gameplay {
@@ -35,4 +36,12 @@ class Gameplay {
         verticalPosition++
         board.showBoard(horizontalPosition, verticalPosition)
     }
+
+    fun getHorizontalPosition(): Int{
+        return horizontalPosition
+    }
+    fun getVerticalPosition(): Int{
+        return verticalPosition
+    }
 }
+*/

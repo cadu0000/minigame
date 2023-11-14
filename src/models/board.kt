@@ -3,19 +3,21 @@ package models
 class Board constructor(
     var horizontal: Int = 2,
     var vertical: Int = 2,
-    val board: Array<Array<String>> = Array(horizontal){
-        Array(vertical){
-            "_"
-        }
-    }
 ){
-    fun chooseYourChar(char: String): Array<Array<String>> {
-        board[0][0] = char
+
+    fun createBoard(): Array<Array<String>> {
+        var board: Array<Array<String>> = Array(horizontal){Array(vertical){""} }
+        for (i in 0 until horizontal) {
+            for (j in 0 until vertical) {
+                board[i][j] = "_"
+            }
+        }
         return board
     }
 
-    fun showBoard(horizontalPosition: Int, verticalPosition: Int){
-        board[horizontalPosition][verticalPosition] = "C"
+    fun showBoard(board: Array<Array<String>>){
+        //board[movements.getHorizontalPosition()][movements.getVerticalPosition()] = char
+        val array: Array<Array<String>> = board
         for (row in board){
             println(row.contentToString())
         }

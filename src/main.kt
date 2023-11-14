@@ -1,8 +1,11 @@
+import models.Board
 import java.util.Scanner
 
 fun main(args: Array<String>) {
-    val horizontal: Scanner = Scanner(System.`in`)
-    horizontal.nextInt()
-    val vertical: Scanner = Scanner(System.`in`)
-    vertical.nextInt()
+    val horizontal: Int = Scanner(System.`in`).nextInt()
+    val vertical: Int = Scanner(System.`in`).nextInt()
+
+    val board: Board = Board(horizontal, vertical)
+    var variavel = board.createBoard()
+    board.showBoard(variavel)
 }
